@@ -15,9 +15,9 @@
  */
 package com.t07m.application;
 
-public abstract class Service implements Runnable {
+public abstract class Service<T extends Application> implements Runnable {
 	
-	  public final Application app;
+	  public final T app;
 	  
 	  private final long UPDATE_FREQUENCY;
 	  
@@ -27,7 +27,7 @@ public abstract class Service implements Runnable {
 	  
 	  private boolean running = false;
 	  
-	  public Service(Application app, long updateFrequency) {
+	  public Service(T app, long updateFrequency) {
 	    this.app = app;
 	    this.UPDATE_FREQUENCY = updateFrequency;
 	  }
