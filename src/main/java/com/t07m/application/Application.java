@@ -99,9 +99,6 @@ public abstract class Application {
 			};
 			Thread thread1 = new Thread(runnable);
 			thread1.start();
-			try {
-				Thread.currentThread().join();
-			} catch (InterruptedException interruptedException) {}
 		} 
 	}
 
