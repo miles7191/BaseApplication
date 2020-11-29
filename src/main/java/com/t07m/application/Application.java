@@ -28,7 +28,6 @@ public abstract class Application {
 
 	public Application() {
 		internalInit();
-		start();
 	}
 	
 	public abstract void init();
@@ -36,10 +35,6 @@ public abstract class Application {
 	private void internalInit() {
 		es = Executors.newWorkStealingPool();
 		services = new ArrayList<Service>();
-		init();
-		for(Service s : services) {
-			s.init();
-		}
 	}
 
 	public void registerService(Service service) {
@@ -83,9 +78,13 @@ public abstract class Application {
 		}
 	}
 
-	private void start() {
+	public void start() {
 		if (!this.running) {
 			this.running = true;
+			init();
+			for(Service s : services) {
+				s.init();
+			}
 			Runnable runnable = () -> {
 				while (this.running) {
 					try {
