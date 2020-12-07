@@ -25,6 +25,7 @@ public abstract class Application {
 	private boolean running = false;
 	private ExecutorService es = null;
 	private List<Service> services;
+	private long minFrequency = 1000;
 
 	public Application() {
 		internalInit();
@@ -39,8 +40,9 @@ public abstract class Application {
 
 	public void registerService(Service service) {
 		synchronized(services) {
-			if (!this.services.contains(service))
-				this.services.add(service); 
+			if (!this.services.contains(service)) {
+				this.services.add(service);
+			}
 		}
 	}
 
@@ -60,15 +62,20 @@ public abstract class Application {
 	}
 
 	private int loop() {
+		long nextUpdate = minFrequency;
 		synchronized(services) {
 			for (Service service : this.services) {
-				if (!service.isRunning() && !service.isQueued()) {
+				if (!service.isRunning() && !service.isQueued() ) {
+					long next = service.getUpdateFrequency() - (System.currentTimeMillis() - service.getLastUpdate());
+					if(nextUpdate > next) {
+						nextUpdate = next;
+					}
 					service.queued();
 					this.es.execute(service);
 				} 
 			} 
 		}
-		return 10;
+		return Math.max((int) (nextUpdate * .75), 1);
 	}
 
 	private void internalCleanup() {
