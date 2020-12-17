@@ -15,6 +15,9 @@
  */
 package com.t07m.application;
 
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public abstract class Service<T extends Application> implements Runnable {
 
 	public final T app;
@@ -22,10 +25,9 @@ public abstract class Service<T extends Application> implements Runnable {
 	private final long UPDATE_FREQUENCY;
 
 	private long lastUpdate = 0L;
+	private Future<Service<T>> future;
 
-	private boolean queued = false;
-
-	private boolean running = false;
+	private AtomicBoolean running = new AtomicBoolean(false);
 
 	public Service(T app, long updateFrequency) {
 		this.app = app;
@@ -39,23 +41,19 @@ public abstract class Service<T extends Application> implements Runnable {
 	public abstract void process();
 
 	public final boolean isRunning() {
-		return this.running;
+		return this.running.get();
 	}
 
 	public final boolean isQueued() {
-		return this.queued;
+		return future != null;
 	}
 
 	public final void run() {
-		this.running = true;
-		this.queued = false;
+		this.running.set(true);
 		this.lastUpdate = System.currentTimeMillis();
 		process();
-		this.running = false;
-	}
-
-	public final void queued() {
-		this.queued = true;
+		this.future = null;
+		this.running.set(false);
 	}
 
 	public final void forceUpdate() {
@@ -65,9 +63,17 @@ public abstract class Service<T extends Application> implements Runnable {
 	public final long getUpdateFrequency() {
 		return this.UPDATE_FREQUENCY;
 	}
-	
+
 	public final long getLastUpdate() {
 		return this.lastUpdate;
+	}
+
+	Future<Service<T>> getFuture() {
+		return future;
+	}
+
+	void setFuture(Future<Service<T>> future) {
+		this.future = future;
 	}
 
 }

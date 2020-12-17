@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public abstract class Application {
 
@@ -30,7 +31,7 @@ public abstract class Application {
 	public Application() {
 		internalInit();
 	}
-	
+
 	public abstract void init();
 
 	private void internalInit() {
@@ -70,12 +71,11 @@ public abstract class Application {
 					if(nextUpdate > next) {
 						nextUpdate = next;
 					}
-					service.queued();
-					this.es.execute(service);
-				} 
-			} 
+					service.setFuture(this.es.submit(service));
+				}
+			}
 		}
-		return Math.max((int) (nextUpdate * .75), 1);
+		return Math.max((int) (nextUpdate * .75), 0);
 	}
 
 	private void internalCleanup() {
