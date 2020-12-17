@@ -45,7 +45,7 @@ public abstract class Service<T extends Application> implements Runnable {
 	}
 
 	public final boolean isQueued() {
-		return future != null;
+		return future != null && !future.isDone();
 	}
 
 	public final void run() {
