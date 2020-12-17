@@ -51,7 +51,11 @@ public abstract class Service<T extends Application> implements Runnable {
 	public final void run() {
 		this.running.set(true);
 		this.lastUpdate = System.currentTimeMillis();
-		process();
+		try {
+			process();
+		} catch(RuntimeException e) {
+			e.printStackTrace();
+		}
 		this.future = null;
 		this.running.set(false);
 	}
