@@ -17,11 +17,11 @@ package com.t07m.application;
 
 import java.util.concurrent.TimeUnit;
 
-public class TestService extends Service{
+public class TestService extends Service<TestApplication>{
 
 	int count = 0;
 	
-	public TestService(Application app) {
+	public TestService(TestApplication app) {
 		super(app, TimeUnit.SECONDS.toMillis(1));
 	}
 
@@ -34,7 +34,7 @@ public class TestService extends Service{
 		count++;
 		if(count == 10) {
 			System.out.println("Count hit 10. Sending StopCommand");
-			app.stop();
+			getApp().stop();
 		}
 	}
 

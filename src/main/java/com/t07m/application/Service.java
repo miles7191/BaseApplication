@@ -18,20 +18,29 @@ package com.t07m.application;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+@ToString
 public abstract class Service<T extends Application> implements Runnable {
 
-	public final T app;
+	@ToString.Exclude
+	private @Getter(AccessLevel.PROTECTED) final T app;
 
-	private final long UPDATE_FREQUENCY;
+	private @Getter final long updateFrequency;
 
-	private long lastUpdate = 0L;
-	private Future<Service<T>> future;
+	private @Getter long lastUpdate = 0L;
+	
+	@ToString.Exclude
+	private @Getter @Setter(AccessLevel.PACKAGE) Future<Service<T>> future;
 
 	private AtomicBoolean running = new AtomicBoolean(false);
 
 	public Service(T app, long updateFrequency) {
 		this.app = app;
-		this.UPDATE_FREQUENCY = updateFrequency;
+		this.updateFrequency = updateFrequency;
 	}
 
 	public void init() {}
@@ -43,9 +52,14 @@ public abstract class Service<T extends Application> implements Runnable {
 	public final boolean isRunning() {
 		return this.running.get();
 	}
+	
+	final void setRunning(boolean val) {
+		this.running.set(val);
+	}
 
+	@ToString.Include
 	public final boolean isQueued() {
-		return future != null && !future.isDone();
+		return running.get() == true ? false : future != null && !future.isDone();
 	}
 
 	public final void run() {
@@ -53,7 +67,7 @@ public abstract class Service<T extends Application> implements Runnable {
 		this.lastUpdate = System.currentTimeMillis();
 		try {
 			process();
-		} catch(RuntimeException e) {
+		} catch(Exception e) {
 			e.printStackTrace();
 		}
 		this.future = null;
@@ -63,21 +77,4 @@ public abstract class Service<T extends Application> implements Runnable {
 	public final void forceUpdate() {
 		this.lastUpdate = 0L;
 	}
-
-	public final long getUpdateFrequency() {
-		return this.UPDATE_FREQUENCY;
-	}
-
-	public final long getLastUpdate() {
-		return this.lastUpdate;
-	}
-
-	Future<Service<T>> getFuture() {
-		return future;
-	}
-
-	void setFuture(Future<Service<T>> future) {
-		this.future = future;
-	}
-
 }

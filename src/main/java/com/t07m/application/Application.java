@@ -19,14 +19,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+@ToString
 public abstract class Application {
 
-	private boolean running = false;
+	private @Getter boolean running = false;
 	private ExecutorService es = null;
 	private List<Service> services;
-	private long minFrequency = 1000;
+	private static @Getter @Setter long minFrequency = 1000;
 
 	public Application() {
 		internalInit();
@@ -35,7 +39,7 @@ public abstract class Application {
 	public abstract void init();
 
 	private void internalInit() {
-		es = Executors.newWorkStealingPool();
+		es = Executors.newCachedThreadPool();
 		services = new ArrayList<Service>();
 	}
 
@@ -72,6 +76,11 @@ public abstract class Application {
 						nextUpdate = next;
 					}
 					service.setFuture(this.es.submit(service));
+				}else if(service.isRunning()) {
+					if(service.getFuture() == null || service.getFuture().isDone() || service.getFuture().isCancelled()) {
+						service.setRunning(false);
+						service.setFuture(null);
+					}
 				}
 			}
 		}
