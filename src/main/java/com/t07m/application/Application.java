@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import com.t07m.application.command.RestartCommand;
@@ -114,7 +115,8 @@ public abstract class Application {
 					if(next <= 0)
 						service.setFuture(this.es.submit(service));
 				}else if(service.isRunning()) {
-					if(service.getFuture() != null && (service.getFuture().isDone() || service.getFuture().isCancelled())) {
+					Future future = service.getFuture();
+					if(future != null && (future.isDone() || future.isCancelled())) {
 						service.setRunning(false);
 						service.setFuture(null);
 					}

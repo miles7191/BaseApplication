@@ -42,6 +42,7 @@ public class RestartCommand extends Command{
 		OptionParser op = new OptionParser();
 		String[] forceOptions = {"f", "force"};
 		op.acceptsAll(Arrays.asList(forceOptions), "Force");
+		this.setOptionParser(op);
 	}
 
 	public void process(OptionSet optionSet, Console console) {
