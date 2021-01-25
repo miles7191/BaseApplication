@@ -18,9 +18,13 @@ package com.t07m.application;
 public class TestApplication extends Application{
 
 	public static void main(String[] args) {
-		new TestApplication();
+		new TestApplication().start();
 	}
 	
+	public TestApplication() {
+		super(false, null);
+	}
+
 	public void init() {
 		this.registerService(new TestService(this));
 	}	

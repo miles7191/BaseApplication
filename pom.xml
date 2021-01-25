@@ -11,5 +11,10 @@
 			<artifactId>lombok</artifactId>
 			<version>1.18.12</version>
 		</dependency>
+		<dependency>
+			<groupId>com.t07m.swing.console</groupId>
+			<artifactId>SwingConsole</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 </project>

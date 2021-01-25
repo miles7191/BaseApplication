@@ -19,6 +19,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import com.t07m.application.command.RestartCommand;
+import com.t07m.console.Console;
+import com.t07m.console.NativeConsole;
+import com.t07m.swing.console.ConsoleWindow;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -30,13 +36,43 @@ public abstract class Application {
 	private @Getter boolean running = false;
 	private ExecutorService es = null;
 	private List<Service> services;
-	private static @Getter @Setter long minFrequency = 1000;
+	private static @Getter @Setter long minUpdateFrequency = 1000;
 
-	public Application() {
+	private @Getter Console console;
+
+	public Application(boolean gui) {
+		this(gui, "Console");
+	}
+
+	public Application(boolean gui, String guiName) {
 		internalInit();
+		initConsole(gui, guiName);
 	}
 
 	public abstract void init();
+
+	private void initConsole(boolean gui, String guiName) {
+		if(gui) {
+			ConsoleWindow cw = new ConsoleWindow(guiName) {
+				public void close() {
+					stop();
+				}
+			};
+			cw.setup();
+			cw.setLocationRelativeTo(null);
+			cw.setVisible(true);
+			this.console = cw;
+		}else {
+			this.console = new NativeConsole() {
+				public void close() {
+					console.cleanup();
+					stop();
+				}
+			};
+			this.console.setup();
+		}
+		this.console.registerCommand(new RestartCommand(this));
+	}
 
 	private void internalInit() {
 		es = Executors.newCachedThreadPool();
@@ -67,17 +103,18 @@ public abstract class Application {
 	}
 
 	private int loop() {
-		long nextUpdate = minFrequency;
+		long nextUpdate = (long) (minUpdateFrequency/.75);
 		synchronized(services) {
 			for (Service service : this.services) {
 				if (!service.isRunning() && !service.isQueued() ) {
 					long next = service.getUpdateFrequency() - (System.currentTimeMillis() - service.getLastUpdate());
-					if(nextUpdate > next) {
+					if(next > 0 && nextUpdate > next) {
 						nextUpdate = next;
 					}
-					service.setFuture(this.es.submit(service));
+					if(next <= 0)
+						service.setFuture(this.es.submit(service));
 				}else if(service.isRunning()) {
-					if(service.getFuture() == null || service.getFuture().isDone() || service.getFuture().isCancelled()) {
+					if(service.getFuture() != null && (service.getFuture().isDone() || service.getFuture().isCancelled())) {
 						service.setRunning(false);
 						service.setFuture(null);
 					}
@@ -109,8 +146,6 @@ public abstract class Application {
 						e.printStackTrace();
 					} 
 				} 
-				internalCleanup();
-				System.exit(0);
 			};
 			Thread thread1 = new Thread(runnable);
 			thread1.start();
@@ -118,6 +153,30 @@ public abstract class Application {
 	}
 
 	public void stop() {
-		this.running = false;
+		this.stop(true);
+	}
+
+	public void stop(boolean exit) {
+		synchronized(services) {
+			this.running = false;
+			this.internalCleanup();
+			this.services.clear();
+			this.es.shutdown();
+			try {
+				this.es.awaitTermination(5, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {}
+			if(exit) {
+				System.exit(0);
+			}else {
+				System.gc();
+			}
+		}
+	}
+
+	public void restart() {
+		this.stop(false);
+		this.console.clear();
+		this.internalInit();
+		this.start();
 	}
 }

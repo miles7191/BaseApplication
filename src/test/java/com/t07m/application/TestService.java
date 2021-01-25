@@ -17,8 +17,13 @@ package com.t07m.application;
 
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class TestService extends Service<TestApplication>{
 
+	private static Logger logger = LoggerFactory.getLogger(TestService.class);
+	
 	int count = 0;
 	
 	public TestService(TestApplication app) {
@@ -26,15 +31,15 @@ public class TestService extends Service<TestApplication>{
 	}
 
 	public void init() {
-		System.out.println("Initialized  Service");
+		logger.info("Initialized  Service");
 	}
 	
 	public void process() {
-		System.out.println("Hello World");
+		logger.info("Hello World");
 		count++;
 		if(count == 10) {
-			System.out.println("Count hit 10. Sending StopCommand");
-			getApp().stop();
+			logger.info("Count hit 10. Sending StopCommand");
+			//getApp().stop();
 		}
 	}
 
