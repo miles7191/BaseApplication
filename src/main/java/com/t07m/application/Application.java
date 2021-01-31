@@ -22,6 +22,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.t07m.application.command.RestartCommand;
 import com.t07m.console.Console;
 import com.t07m.console.NativeConsole;
@@ -33,6 +36,8 @@ import lombok.ToString;
 
 @ToString
 public abstract class Application {
+
+	private static final Logger logger = LoggerFactory.getLogger(Application.class);
 
 	private @Getter boolean running = false;
 	private ExecutorService es = null;
@@ -48,6 +53,15 @@ public abstract class Application {
 	public Application(boolean gui, String guiName) {
 		internalInit();
 		initConsole(gui, guiName);
+		logger.debug("Java Version: " + Runtime.version());
+		logger.debug("Available Processors: " + Runtime.getRuntime().availableProcessors());
+		logger.debug("Max Memory: " + formatSize(Runtime.getRuntime().maxMemory()));
+	}
+
+	private static String formatSize(long v) {
+		if (v < 1024) return v + " B";
+		int z = (63 - Long.numberOfLeadingZeros(v)) / 10;
+		return String.format("%.1f %sB", (double)v / (1L << (z*10)), " KMGTPE".charAt(z));
 	}
 
 	public abstract void init();
