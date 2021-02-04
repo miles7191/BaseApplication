@@ -179,7 +179,6 @@ public abstract class Application {
 
 	public void stop(boolean exit) {
 		synchronized(services) {
-			System.out.println("Stop Called");
 			this.running = false;
 			this.internalCleanup();
 			this.services.clear();
