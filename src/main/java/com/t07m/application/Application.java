@@ -46,6 +46,8 @@ public abstract class Application {
 
 	private @Getter Console console;
 
+	private boolean pause;
+
 	public Application(boolean gui) {
 		this(gui, "Console");
 	}
@@ -80,8 +82,8 @@ public abstract class Application {
 		}else {
 			this.console = new NativeConsole() {
 				public void close() {
-					console.cleanup();
 					stop();
+					console.cleanup();
 				}
 			};
 			this.console.setup();
@@ -119,20 +121,22 @@ public abstract class Application {
 
 	private int loop() {
 		long nextUpdate = (long) (minUpdateFrequency/.75);
-		synchronized(services) {
-			for (Service service : this.services) {
-				if (!service.isRunning() && !service.isQueued() ) {
-					long next = service.getUpdateFrequency() - (System.currentTimeMillis() - service.getLastUpdate());
-					if(next > 0 && nextUpdate > next) {
-						nextUpdate = next;
-					}
-					if(next <= 0)
-						service.setFuture(this.es.submit(service));
-				}else if(service.isRunning()) {
-					Future future = service.getFuture();
-					if(future != null && (future.isDone() || future.isCancelled())) {
-						service.setRunning(false);
-						service.setFuture(null);
+		if(!pause) {
+			synchronized(services) {
+				for (Service service : this.services) {
+					if (!service.isRunning() && !service.isQueued() ) {
+						long next = service.getUpdateFrequency() - (System.currentTimeMillis() - service.getLastUpdate());
+						if(next > 0 && nextUpdate > next) {
+							nextUpdate = next;
+						}
+						if(next <= 0)
+							service.setFuture(this.es.submit(service));
+					}else if(service.isRunning()) {
+						Future future = service.getFuture();
+						if(future != null && (future.isDone() || future.isCancelled())) {
+							service.setRunning(false);
+							service.setFuture(null);
+						}
 					}
 				}
 			}
@@ -142,8 +146,9 @@ public abstract class Application {
 
 	private void internalCleanup() {
 		synchronized(services) {
-			for (Service service : this.services)
+			for (Service service : this.services) {
 				service.cleanup(); 
+			}
 		}
 	}
 
@@ -174,6 +179,7 @@ public abstract class Application {
 
 	public void stop(boolean exit) {
 		synchronized(services) {
+			System.out.println("Stop Called");
 			this.running = false;
 			this.internalCleanup();
 			this.services.clear();
@@ -195,4 +201,13 @@ public abstract class Application {
 		this.internalInit();
 		this.start();
 	}
+
+	public void pauseExecution() {
+		this.pause = true;
+	}
+
+	public void resumeExecution() {
+		this.pause = false;
+	}
+
 }
