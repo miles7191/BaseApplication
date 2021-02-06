@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 import com.t07m.application.command.RestartCommand;
 import com.t07m.console.Console;
 import com.t07m.console.NativeConsole;
-import com.t07m.swing.console.ConsoleWindow;
+import com.t07m.console.swing.ConsoleWindow;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -149,6 +149,7 @@ public abstract class Application {
 			for (Service service : this.services) {
 				service.cleanup(); 
 			}
+			cleanup();
 		}
 	}
 
@@ -209,4 +210,8 @@ public abstract class Application {
 		this.pause = false;
 	}
 
+	public void cleanup() {
+		
+	}
+	
 }
