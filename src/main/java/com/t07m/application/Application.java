@@ -22,10 +22,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.jline.utils.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.scheduling.support.CronTrigger;
 
+import com.github.zafarkhaja.semver.Version;
 import com.t07m.application.command.RestartCommand;
+import com.t07m.autoupdater.AutoUpdater;
+import com.t07m.autoupdater.Release;
 import com.t07m.console.Console;
 import com.t07m.console.NativeConsole;
 import com.t07m.console.swing.ConsoleWindow;
@@ -43,6 +49,11 @@ public abstract class Application {
 	private ExecutorService es = null;
 	private List<Service> services;
 	private static @Getter @Setter long minUpdateFrequency = 1000;
+
+	private final Object updaterLock = new Object();
+	private AutoUpdater autoUpdater;
+	private CronTrigger updaterCron;
+	private ThreadPoolTaskScheduler updaterScheduler;
 
 	private @Getter Console console;
 
@@ -64,6 +75,41 @@ public abstract class Application {
 		if (v < 1024) return v + " B";
 		int z = (63 - Long.numberOfLeadingZeros(v)) / 10;
 		return String.format("%.1f %sB", (double)v / (1L << (z*10)), " KMGTPE".charAt(z));
+	}
+
+	public void initAutoUpdater(String githubRepo, Version version, String startupScript, boolean usePrerelease, String cronSchedule) {
+		try {
+			if(updaterScheduler != null) {
+				updaterScheduler.shutdown();
+			}
+			updaterScheduler = new ThreadPoolTaskScheduler();
+			updaterScheduler.initialize();
+			updaterCron = new CronTrigger(cronSchedule);
+			synchronized(updaterLock) {
+				autoUpdater = new AutoUpdater(githubRepo, version, startupScript, usePrerelease);
+			}
+			updaterScheduler.schedule(new Runnable() {
+				public void run() {
+					synchronized(updaterLock) {
+						logger.info("Checking for updates");
+						Release[] releases = autoUpdater.getNewReleases();
+						logger.info("Found " + releases.length + " updates");
+						if(releases.length > 0) {
+							Release release = releases[0];
+							logger.info("Updating to " + release.getVersion().toString());
+							autoUpdater.update(release, new Runnable() {
+								public void run() {
+									stop(false);
+								}
+							});
+						}
+					}
+				}
+			}, updaterCron);
+			logger.info("AutoUpdater scheduled");
+		}catch(IllegalArgumentException e) {
+			logger.error(e.getMessage());
+		}
 	}
 
 	public abstract void init();
@@ -211,7 +257,7 @@ public abstract class Application {
 	}
 
 	public void cleanup() {
-		
+
 	}
-	
+
 }

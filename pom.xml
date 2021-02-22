@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.t07m.application</groupId>
 	<artifactId>BaseApplication</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<dependencies>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -15,6 +15,16 @@
 			<groupId>com.t07m.swing.console</groupId>
 			<artifactId>SwingConsole</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.t07m.autoupdater</groupId>
+			<artifactId>AutoUpdater</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>5.3.4</version>
 		</dependency>
 	</dependencies>
 </project>
