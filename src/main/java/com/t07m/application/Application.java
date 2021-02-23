@@ -15,6 +15,9 @@
  */
 package com.t07m.application;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -79,6 +82,7 @@ public abstract class Application {
 
 	public void initAutoUpdater(String githubRepo, Version version, String startupScript, boolean usePrerelease, String cronSchedule) {
 		try {
+			AutoUpdater.cleanupFiles();
 			if(updaterScheduler != null) {
 				updaterScheduler.shutdown();
 			}
